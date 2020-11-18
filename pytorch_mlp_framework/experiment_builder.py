@@ -154,20 +154,21 @@ class ExperimentBuilder(nn.Module):
         Complete the code in the block below to collect absolute mean of the gradients for each layer in all_grads with the             layer names in layers.
         """
         ########################################
-        
-        
+        for layer, params in named_parameters:
+            layer = layer.split('.')
+            layers.append(layer[1])
+            param_type = layer[-1]
+            if param_type != 'activation_type':
+                all_grads.append(torch.mean(torch.abs(params)).item())
+        plot_grads = []
+        for i in range(0, len(all_grads), 2):
+            plot_grads.append(all_grads[i] + all_grads[i+1])
         ########################################
-            
-        
-        plt = self.plot_func_def(all_grads, layers)
-        
+        layers = np.unique(layers)
+        plt = self.plot_func_def(plot_grads, layers)
         return plt
     
-    
-    
-    
-    def run_train_iter(self, x, y):
-        
+    def run_train_iter(self, x, y):        
         self.train()  # sets model to training mode (in case batch normalization or other methods have different procedures for training and evaluation)
         x, y = x.float().to(device=self.device), y.long().to(
             device=self.device)  # send data to device as torch tensors
