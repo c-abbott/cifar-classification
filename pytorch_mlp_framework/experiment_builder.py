@@ -7,14 +7,14 @@ import os
 import numpy as np
 import time
 
-from pytorch_mlp_framework.storage_utils import save_statistics
+from pytorch_mlp_framework.storage_utils import save_statistics 
 from matplotlib import pyplot as plt
 import matplotlib
 matplotlib.rcParams.update({'font.size': 8})
 
 class ExperimentBuilder(nn.Module):
     def __init__(self, network_model, experiment_name, num_epochs, train_data, val_data,
-                 test_data, weight_decay_coefficient, use_gpu, continue_from_epoch=-1):
+                test_data, weight_decay_coefficient, use_gpu, continue_from_epoch=-1):
         """
         Initializes an ExperimentBuilder object. Such an object takes care of running training and evaluation of a deep net
         on a given dataset. It also takes care of saving per epoch models and automatically inferring the best val model
@@ -121,14 +121,14 @@ class ExperimentBuilder(nn.Module):
 
     def plot_func_def(self,all_grads, layers):
         
-       
+    
         """
         Plot function definition to plot the average gradient with respect to the number of layers in the given model
         :param all_grads: Gradients wrt weights for each layer in the model.
         :param layers: Layer names corresponding to the model parameters
         :return: plot for gradient flow
         """
-        plt.plot(all_grads, alpha=0.3, color="b")
+        plt.semilogy(all_grads, alpha=0.3, color="b")
         plt.hlines(0, 0, len(all_grads)+1, linewidth=1, color="k" )
         plt.xticks(range(0,len(all_grads), 1), layers, rotation="vertical")
         plt.xlim(xmin=0, xmax=len(all_grads))
@@ -145,27 +145,23 @@ class ExperimentBuilder(nn.Module):
         """
         The function is being called in Line 298 of this file. 
         Receives the parameters of the model being trained. Returns plot of gradient flow for the given model parameters.
-       
+    
         """
+        # Data storage
         all_grads = []
         layers = []
-        
-        """
-        Complete the code in the block below to collect absolute mean of the gradients for each layer in all_grads with the             layer names in layers.
-        """
         ########################################
         for layer, params in named_parameters:
-            layer = layer.split('.')
-            layers.append(layer[1])
-            param_type = layer[-1]
-            if param_type != 'activation_type':
-                all_grads.append(torch.mean(torch.abs(params)).item())
-        plot_grads = []
-        for i in range(0, len(all_grads), 2):
-            plot_grads.append(all_grads[i] + all_grads[i+1])
+            magrads = torch.mean(torch.abs(params.grad)).item() # Fetching mean abs grad
+            param_type = layer.split('.')[-1]
+            # Weights dominate parameters hence biases ignored
+            if param_type == 'weight':
+                all_grads.append(magrads)
+                layer = layer.replace('layer_dict.', '').replace('.weight','').replace('.', '_') # Removing clutter 
+                layers.append(layer)
         ########################################
-        layers = np.unique(layers)
-        plt = self.plot_func_def(plot_grads, layers)
+        plt = self.plot_func_def(all_grads, layers)
+        plt.yscale('log')
         return plt
     
     def run_train_iter(self, x, y):        
@@ -205,7 +201,7 @@ class ExperimentBuilder(nn.Module):
         return loss.cpu().data.numpy(), accuracy
 
     def save_model(self, model_save_dir, model_save_name, model_idx, best_validation_model_idx,
-                   best_validation_model_acc):
+                best_validation_model_acc):
         """
         Save the network parameter state and current best val epoch idx and best val accuracy.
         :param model_save_name: Name to use to save model without the epoch index
@@ -300,6 +296,7 @@ class ExperimentBuilder(nn.Module):
             if not os.path.exists(os.path.join(self.experiment_saved_models, 'gradient_flow_plots')):
                 os.mkdir(os.path.join(self.experiment_saved_models, 'gradient_flow_plots'))
                 # plt.legend(loc="best")
+            plt.gcf().subplots_adjust(bottom=0.40)
             plt.savefig(os.path.join(self.experiment_saved_models, 'gradient_flow_plots', "epoch{}.pdf".format(str(epoch_idx))))
             ################################################################
         
@@ -311,7 +308,7 @@ class ExperimentBuilder(nn.Module):
         with tqdm.tqdm(total=len(self.test_data)) as pbar_test:  # ini a progress bar
             for x, y in self.test_data:  # sample batch
                 loss, accuracy = self.run_evaluation_iter(x=x,
-                                                          y=y)  # compute loss and accuracy by running an evaluation step
+                                                        y=y)  # compute loss and accuracy by running an evaluation step
                 current_epoch_losses["test_loss"].append(loss)  # save test loss
                 current_epoch_losses["test_acc"].append(accuracy)  # save test accuracy
                 pbar_test.update(1)  # update progress bar status
@@ -319,7 +316,7 @@ class ExperimentBuilder(nn.Module):
                     "loss: {:.4f}, accuracy: {:.4f}".format(loss, accuracy))  # update progress bar string output
 
         test_losses = {key: [np.mean(value)] for key, value in
-                       current_epoch_losses.items()}  # save test set metrics in dict format
+                    current_epoch_losses.items()}  # save test set metrics in dict format
         save_statistics(experiment_log_dir=self.experiment_logs, filename='test_summary.csv',
                         # save test set metrics on disk in .csv format
                         stats_dict=test_losses, current_epoch=0, continue_from_mode=False)
