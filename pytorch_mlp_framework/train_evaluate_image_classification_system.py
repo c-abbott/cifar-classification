@@ -68,6 +68,7 @@ if __name__ == "__main__":
                                         experiment_name=args.experiment_name,
                                         num_epochs=args.num_epochs,
                                         weight_decay_coefficient=args.weight_decay_coefficient,
+                                        learning_rate=args.learning_rate,
                                         use_gpu=args.use_gpu,
                                         continue_from_epoch=args.continue_from_epoch,
                                         train_data=train_data_loader, val_data=val_data_loader,

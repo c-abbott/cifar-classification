@@ -6,6 +6,7 @@ import tqdm
 import os
 import numpy as np
 import time
+import pickle
 
 from pytorch_mlp_framework.storage_utils import save_statistics 
 from matplotlib import pyplot as plt
@@ -14,7 +15,7 @@ matplotlib.rcParams.update({'font.size': 8})
 
 class ExperimentBuilder(nn.Module):
     def __init__(self, network_model, experiment_name, num_epochs, train_data, val_data,
-                test_data, weight_decay_coefficient, use_gpu, continue_from_epoch=-1):
+                test_data, weight_decay_coefficient, learning_rate, use_gpu, continue_from_epoch=-1):
         """
         Initializes an ExperimentBuilder object. Such an object takes care of running training and evaluation of a deep net
         on a given dataset. It also takes care of saving per epoch models and automatically inferring the best val model
@@ -72,8 +73,9 @@ class ExperimentBuilder(nn.Module):
         print('Total number of conv layers', num_conv_layers)
         print('Total number of linear layers', num_linear_layers)
 
+        print(f"Learning rate:  {learning_rate}")
         self.optimizer = optim.Adam(self.parameters(), amsgrad=False,
-                                    weight_decay=weight_decay_coefficient)
+                                    weight_decay=weight_decay_coefficient, lr=learning_rate)
         self.learning_rate_scheduler = optim.lr_scheduler.CosineAnnealingLR(self.optimizer,
                                                                             T_max=num_epochs,
                                                                             eta_min=0.00002)
@@ -81,6 +83,10 @@ class ExperimentBuilder(nn.Module):
         self.experiment_folder = os.path.abspath(experiment_name)
         self.experiment_logs = os.path.abspath(os.path.join(self.experiment_folder, "result_outputs"))
         self.experiment_saved_models = os.path.abspath(os.path.join(self.experiment_folder, "saved_models"))
+
+        self.pickle_dir = os.path.abspath(os.path.join(self.experiment_folder, "grad_output"))
+
+        self.grads = []
 
         # Set best models to be at 0 since we are just starting
         self.best_val_model_idx = 0
@@ -90,6 +96,8 @@ class ExperimentBuilder(nn.Module):
             os.mkdir(self.experiment_folder)  # create the experiment directory
             os.mkdir(self.experiment_logs)  # create the experiment log directory
             os.mkdir(self.experiment_saved_models)  # create the experiment saved models directory
+
+            os.mkdir(self.pickle_dir) # create the experiment grad directory
 
         self.num_epochs = num_epochs
         self.criterion = nn.CrossEntropyLoss().to(self.device)  # send the loss computation to the GPU
@@ -120,8 +128,7 @@ class ExperimentBuilder(nn.Module):
 
 
     def plot_func_def(self,all_grads, layers):
-        
-    
+
         """
         Plot function definition to plot the average gradient with respect to the number of layers in the given model
         :param all_grads: Gradients wrt weights for each layer in the model.
@@ -150,16 +157,15 @@ class ExperimentBuilder(nn.Module):
         # Data storage
         all_grads = []
         layers = []
-        ########################################
         for layer, params in named_parameters:
-            magrads = torch.mean(torch.abs(params.grad)).item() # Fetching mean abs grad
-            param_type = layer.split('.')[-1]
-            # Weights dominate parameters hence biases ignored
-            if param_type == 'weight':
-                all_grads.append(magrads)
-                layer = layer.replace('layer_dict.', '').replace('.weight','').replace('.', '_') # Removing clutter 
-                layers.append(layer)
-        ########################################
+            if ('weight' in layer) and (params.requires_grad):
+                all_grads.append(params.grad.abs().mean().item())
+                layer = layer.replace('layer_dict.', '').replace('.weight', '').replace('.', '_') # Removing clutter 
+                layers.append(layer)   
+
+        self.grads.append([all_grads, layers])
+        pickle.dump(self.grads, open(os.path.join(self.pickle_dir, "grads.p"), "wb"))
+
         plt = self.plot_func_def(all_grads, layers)
         plt.yscale('log')
         return plt
