@@ -10,8 +10,8 @@ The aim of this coursework is to explore the classification of images using conv
 We look upon two classic architectures in VGG38 (left) and VGG08 (right) and observe that the deeper, 38-layer architecture, suffers greatly from the problem of *vanishing gradients* (note the log scale on the y-axis). All code to accomplish this take was implemented in Python and [PyTorch](https://pytorch.org/).
 
 <p float="left">
-  <img src="images/vgg38_grads-1.png" width="440" />
-  <img src="images/vgg08_grads-1.png" width="440" > 
+  <img src="images/vgg38_grads-1.png" width="430" />
+  <img src="images/vgg08_grads-1.png" width="430" > 
 </p>
 
 It is common knowledge that techniques such as [Batch Normalization](https://arxiv.org/pdf/1502.03167v3.pdf) (BatchNorm) help greatly in alleviating the vanishing gradients problem yet the causal mechanisms for it's effectiveness are still poorly understood. For example, here is the gradient flow plot for the VGG38 architecture but now with BatchNorm implemented:
