@@ -7,12 +7,10 @@ This assignment-based course is focused on the implementation and evaluation of 
 # CIFAR Classification (Pytorch)
 The aim of this coursework is to explore the classification of images using convolutional neural networks on CIFAR100 (pronounced as “see far 100”). CIFAR100 consists of 60,000 32 × 32 colour images in 100 classes, with 600 images per class. 
 
-We look upon two classic architectures in VGG38 (left) and VGG08 (right) and observe that the deeper, 38-layer architecture, suffers greatly from the problem of *vanishing gradients* (note the log scale on the y-axis). All code to accomplish this take was implemented in Python and [PyTorch](https://pytorch.org/).
+We look upon two classic architectures in VGG38 (top) and VGG08 (bottom) and observe that the deeper, 38-layer architecture, suffers greatly from the problem of *vanishing gradients* (note the log scale on the y-axis). All code to accomplish this take was implemented in Python and [PyTorch](https://pytorch.org/).
 
-<p float="left">
-  <img src="images/vgg38_grads-1.png" width="430" />
-  <img src="images/vgg08_grads-1.png" width="430" > 
-</p>
+![](images/vgg38_grads-1.png)
+![](images/vgg08_grads-1.png)
 
 It is common knowledge that techniques such as [Batch Normalization](https://arxiv.org/pdf/1502.03167v3.pdf) (BatchNorm) help greatly in alleviating the vanishing gradients problem yet the causal mechanisms for it's effectiveness are still poorly understood. For example, here is the gradient flow plot for the VGG38 architecture but now with BatchNorm implemented:
 
