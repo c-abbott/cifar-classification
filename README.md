@@ -4,7 +4,7 @@ This repository contains the code for the University of Edinburgh [School of Inf
 
 This assignment-based course is focused on the implementation and evaluation of machine learning systems. Students who do this course will have experience in the design, implementation, training, and evaluation of machine learning systems.
 
-# CIFAR Classification (Pytorch)
+# CIFAR Classification (PyTorch)
 The aim of this coursework is to explore the classification of images using convolutional neural networks on CIFAR100 (pronounced as “see far 100”). CIFAR100 consists of 60,000 32 × 32 colour images in 100 classes, with 600 images per class. 
 
 We look upon two classic architectures in VGG38 (top) and VGG08 (bottom) and observe that the deeper, 38-layer architecture, suffers greatly from the problem of *vanishing gradients* (note the log scale on the y-axis). All code to accomplish this take was implemented in Python and [PyTorch](https://pytorch.org/).
